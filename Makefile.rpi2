@@ -1,0 +1,17 @@
+include rpi-common.mk
+KERNEL = kernel7.img
+# KERNEL_LDS = kernel.lds
+KERNEL_LDS = kernel-qemu.lds
+KERNEL_SRCS = vectors.s hw.c kernel.c
+KERNEL_OBJS = $(call src2objs,${KERNEL_SRCS})
+KERNEL_ELF = ${KERNEL:.img=.elf}
+KERNEL_LIST = ${KERNEL:.img=.list}
+CPPFLAGS += -DCONFIG_RPI2
+all :: ${KERNEL} ${KERNEL:.img=.dis}
+emu : ${KERNEL}
+	@echo Press CTRL-A x to quit. CTRL-A h for help.
+	qemu-system-arm -M raspi2 -cpu cortex-a7 -m 256M -smp 4 -nographic -serial null -serial mon:stdio -dtb dtb/bcm2709-rpi-2-b.dtb -kernel ${KERNEL}
+clean :: ; $(RM) ${KERNEL_ELF} ${KERNEL_LIST} ${KERNEL_OBJS}
+## TODO: it would be nice to clean up this rule. either as a pattern rule or generated automatically
+${KERNEL_ELF} : ${KERNEL_OBJS}
+	$(LD) $(LDFLAGS) $^ -T ${KERNEL_LDS} -o $@

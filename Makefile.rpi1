@@ -1,0 +1,17 @@
+include rpi-common.mk
+KERNEL = kernel.img
+KERNEL_LDS = kernel.lds
+KERNEL_SRCS = vectors.s hw.c kernel.c
+KERNEL_OBJS = $(call src2objs,${KERNEL_SRCS})
+KERNEL_ELF = ${KERNEL:.img=.elf}
+KERNEL_LIST = ${KERNEL:.img=.list}
+CPPFLAGS += -DCONFIG_RPI1
+all :: ${KERNEL} ${KERNEL:.img=.dis}
+emu : ${KERNEL}
+	@echo "Not supported!"
+	false
+	# qemu-system-arm -M raspi1 -cpu arm1176 -m 256M -nographic -kernel ${KERNEL}
+clean :: ; $(RM) ${KERNEL_ELF} ${KERNEL_LIST} ${KERNEL_OBJS}
+## TODO: it would be nice to clean up this rule. either as a pattern rule or generated automatically
+${KERNEL_ELF} : ${KERNEL_OBJS}
+	$(LD) $(LDFLAGS) $^ -T ${KERNEL_LDS} -o $@
